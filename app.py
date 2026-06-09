@@ -57,7 +57,6 @@ def chat(message, history):
 # ---------------------------------------------------------------------------
 
 with gr.Blocks(
-    theme=gr.themes.Soft(primary_hue="indigo"),
     title="RulesBot",
 ) as demo:
 
@@ -76,10 +75,8 @@ with gr.Blocks(
         with gr.Column(scale=3):
             gr.ChatInterface(
                 fn=chat,
-                type="messages",
                 chatbot=gr.Chatbot(
                     height=440,
-                    type="messages",
                     placeholder=(
                         "<div style='text-align:center; color:#9ca3af; margin-top:3rem;'>"
                         "Ask a rules question to get started — no arguing required 🎯"
@@ -138,4 +135,4 @@ if __name__ == "__main__":
     print("  RulesBot — starting up")
     print("="*50 + "\n")
     run_ingestion()
-    demo.launch()
+    demo.launch(theme=gr.themes.Soft(primary_hue="indigo"))

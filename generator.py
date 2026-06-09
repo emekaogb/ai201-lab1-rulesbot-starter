@@ -35,5 +35,49 @@ def generate_response(query, retrieved_chunks):
             "Try rephrasing your question — or check that your ingestion pipeline is working."
         )
 
-    # Your implementation here.
-    return "⚙️ Response generation not yet implemented. Complete Milestone 3 to activate answers."
+    # Filter chunks by distance threshold — only use relevant matches
+    distance_threshold = 0.5
+    relevant_chunks = [c for c in retrieved_chunks if c["distance"] < distance_threshold]
+
+    if not relevant_chunks:
+        return (
+            "I don't have any information on this in the loaded rule books. "
+            "Try rephrasing your question or ask about a different game."
+        )
+
+    # Format context with game labels and distance scores
+    context = ""
+    for chunk in relevant_chunks:
+        context += f"[{chunk['game']}, relevance: {chunk['distance']:.2f}]\n{chunk['text']}\n\n"
+
+    messages = [
+        {
+            "role": "system",
+            "content": """You are a helpful assistant answering questions about board game rules.
+
+CRITICAL: You must ONLY answer based on the rule text provided below. Do not use your general knowledge about games.
+- If the answer is found in the rules, cite which game it comes from.
+- If the answer is NOT in the provided rules, respond with: "I don't have that information in the loaded rule books."
+- Never make up or infer rules that aren't explicitly stated in the provided text.
+
+The rules are labeled by game and include relevance scores. Lower scores mean more relevant matches."""
+        },
+        {
+            "role": "user",
+            "content": f"""Question: {query}
+
+Retrieved rules from the rulebooks:
+
+{context}
+
+Answer using ONLY the rules provided above. Always cite which game the rule comes from. If the information is not in the rules, say so clearly."""
+        }
+    ]
+
+    response = _client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=messages,
+        max_tokens=500
+    )
+
+    return response.choices[0].message.content
